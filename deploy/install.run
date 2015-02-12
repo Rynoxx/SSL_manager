@@ -1,0 +1,95 @@
+<?php
+/**
+ *
+ * Installer for SSL_manager Module for sentora 1.0.0
+ * Version : 100
+ */
+ 
+require_once('cnf/db.php');
+require_once('dryden/db/driver.class.php');
+require_once('dryden/debug/logger.class.php');
+require_once('dryden/runtime/dataobject.class.php');
+require_once('dryden/sys/versions.class.php');
+require_once('dryden/ctrl/options.class.php');
+require_once('dryden/ctrl/auth.class.php');
+require_once('dryden/ctrl/users.class.php');
+require_once('dryden/fs/director.class.php');
+require_once('inc/dbc.inc.php');
+
+
+//install
+installModule();
+
+function installModule(){
+		global $zdbh;
+		global $controller;
+		
+		if (!is_dir("/etc/sentora/panel/users_ssl/")) {
+		mkdir("/etc/sentora/panel/users_ssl");
+		chmod('/etc/sentora/panel/users_ssl', 0777);
+		rename("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
+		$fp = fopen("/etc/sentora/configs/apache/httpd.conf", "a");
+		$stringToWrite = "ServerName localhost\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "<Directory /etc/sentora/panel>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "Options +FollowSymLinks\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "<IfModule mod_php5.c>\n";
+		fwrite($fp, $stringToWrite);	
+		$stringToWrite = "AddType application/x-httpd-php .php\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "php_flag magic_quotes_gpc Off\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "php_flag track_vars On\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "php_flag register_globals Off\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "php_admin_value upload_tmp_dir /var/sentora/temp\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "</IfModule>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "</Directory>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "<Directory /etc/sentora/panel/cnf/>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "Require all denied \n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "</Directory>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "<Directory /etc/sentora/panel/modules/*/hooks>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "Require all denied \n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "</Directory>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "ServerTokens Prod\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "<IfModule ssl_module>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "Listen 443\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "</IfModule>\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "Include /etc/sentora/configs/apache/httpd-vhosts.conf\n";
+		fwrite($fp, $stringToWrite);
+		$stringToWrite = "Include /etc/sentora/panel/users_ssl/*.conf\n";
+		fwrite($fp, $stringToWrite);
+		fclose($fp);
+				$sql = $zdbh->prepare("UPDATE x_settings
+								SET so_value_tx='true'
+								WHERE so_name_vc='apache_changed'");
+        		$sql->execute();
+		        }
+}
+?>

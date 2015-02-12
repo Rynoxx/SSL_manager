@@ -1,0 +1,45 @@
+<?php
+/**
+ *
+ * Uninstall for SSL_manager Module for sentora 1.0.0
+ * Version : 100
+ */
+ 
+require_once('cnf/db.php');
+require_once('dryden/db/driver.class.php');
+require_once('dryden/debug/logger.class.php');
+require_once('dryden/runtime/dataobject.class.php');
+require_once('dryden/sys/versions.class.php');
+require_once('dryden/ctrl/options.class.php');
+require_once('dryden/ctrl/auth.class.php');
+require_once('dryden/ctrl/users.class.php');
+require_once('dryden/fs/director.class.php');
+require_once('inc/dbc.inc.php');
+
+
+//Remove
+removeModule();
+
+function removeModule(){
+    		global $zdbh;
+		global $controller;
+
+		if (is_dir("/etc/sentora/panel/users_ssl/")) {
+		rrmdir('/etc/sentora/panel/users_ssl/');
+		unlink("/etc/sentora/configs/apache/httpd.conf");
+		rename("/etc/sentora/configs/apache/httpd.conf.bak", "/etc/sentora/configs/apache/httpd.conf");
+		$sql = $zdbh->prepare("UPDATE x_settings SET so_value_tx='true' WHERE so_name_vc='apache_changed'");
+        	$sql->execute();
+		}
+}
+ function rrmdir($dir) {
+     $objects = scandir($dir);
+     foreach ($objects as $object) {
+       if ($object != "." && $object != "..") {
+         unlink($dir."/".$object);
+       }
+     }
+     reset($objects);
+     rmdir($dir);
+ }
+?>

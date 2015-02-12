@@ -1,0 +1,125 @@
+<div class="zmodule_content panel" id="zmodule_header_<@ ModuleName @>">
+    <div class="panel-heading">
+        <img src="<@ ModuleIcon @>" width="35" height="35" border="0" alt="<@ ModuleName @>">
+
+        <div class="zmodule_title">
+            <@ ModuleName @>
+        </div>
+
+        <div class="zmodule_desc" id="zmodule_desc_<@ ModuleName @>"><@ ModuleDesc @></div>
+		
+    </div>
+	
+	<@ Result @>
+	
+	<form action="./?module=SSL_manager&action=select" method="post">
+	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLself" id="inSSLself" value="inSSLself"><: Self signed :></button>
+	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLbought" id="inSSLbought" value="inSSLbought"><: Bought :></button>
+	<@ CSFR_Tag @>
+	</form>
+	
+	<div class="zgrid_wrapper">
+	<h2><: My SSL :></h2>
+		<table class="table table-striped">
+		<tr>
+			<th><: SSL Name :></th>
+			<th></th>
+			<th></th>
+            <th></th>
+		</tr>
+				<% loop SSLList %>
+                <tr>
+                    <td><& name &></td>
+					<form action="./?module=SSL_manager&action=Edit" method="post">
+					<td><input type="hidden" name="inName" value="<& name &>">
+					<button class="btn btn-primary" type="submit" id="button" name="inDownload_<& name &>" id="inDownload_<& name &>" value="inDownload_<& name &>"><: Download :></button></td>
+					<@ CSFR_Tag @>
+					</form>
+					<form action="./?module=SSL_manager&action=NewConf" method="post">
+					<td><input type="hidden" name="inName" value="<& name &>">
+					<button class="button-loader btn btn-primary" type="submit" id="button" name="inNewConf_<& name &>" id="inNewConf_<& name &>" value="inNewConf_<& name &>"><: Make New Conf :></button></td>
+					<@ CSFR_Tag @>	
+					</form>
+					<form action="./?module=SSL_manager&action=Delete" method="post">
+					<td><input type="hidden" name="inName" value="<& name &>">
+					<button class="button-loader delete btn btn-danger" type="submit" id="button" name="inDelete_<& name &>" id="inDelete_<& name &>" value="inDelete_<& name &>"><: Delete :></button></td>
+					<@ CSFR_Tag @>	
+					</form>
+				</tr>
+				<% endloop %>	
+		</table>	
+	</div>
+	
+	<% if isShowSelf %>
+    <div class="zgrid_wrapper">
+        <h2><: SSL Manager :></h2>
+        <form action="./?module=SSL_manager&action=Makenew" method="post">
+            <table class="table table-striped">
+                            <tr>
+                                <th nowrap="nowrap"><: Domain :>:</th>
+                                <td>
+                                    <select name="inDomain" id="inDomain">
+                                        <option value="" selected="selected">-- <: Select a domain :> --</option>
+                                        <% loop DomainList %>
+                                        <option value="<& domain &>"><& domain &></option>
+                                        <% endloop %>
+                                    </select>
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Your Name :>:</th>
+                                <td>
+                                    <input type="text" name="inName" id="inName" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Domain Email :>:</th>
+                                <td>
+                                    <input type="text" name="inAddress" id="inAddress" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: City :>:</th>
+                                <td>
+                                    <input type="text" name="inCity" id="inCity" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Country :>:</th>
+                                <td>
+									<select name="inCountry" id="inCountry">
+                                    <option value="" selected="selected">-- <: Select country :> --</option>
+										<@ ListCountry @>
+									</select>
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Company :>:</th>
+                                <td>
+									<input type="text" name="inCompany" id="inCompany" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Key Password :>:</th>
+                                <td>
+									<input type="text" name="inPassword" id="inPasword" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><button class="button-loader btn btn-primary" type="submit" id="button" name="inSave" id="inSave"><: Save :></button></th>
+                                <td></td>
+                            </tr>
+							</table>
+            <@ CSFR_Tag @>
+        </form>
+    </div>
+    <% endif %>
+	
+	<% if isBought %>
+    <div class="zgrid_wrapper">
+        <h2><: SSL Manager :></h2>
+		Not yet
+		</div>
+	<% endif %>
+
+</div>

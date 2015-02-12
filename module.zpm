@@ -25,7 +25,6 @@
 			<th><: SSL Name :></th>
 			<th></th>
 			<th></th>
-            <th></th>
 		</tr>
 				<% loop SSLList %>
                 <tr>
@@ -34,11 +33,6 @@
 					<td><input type="hidden" name="inName" value="<& name &>">
 					<button class="btn btn-primary" type="submit" id="button" name="inDownload_<& name &>" id="inDownload_<& name &>" value="inDownload_<& name &>"><: Download :></button></td>
 					<@ CSFR_Tag @>
-					</form>
-					<form action="./?module=SSL_manager&action=NewConf" method="post">
-					<td><input type="hidden" name="inName" value="<& name &>">
-					<button class="button-loader btn btn-primary" type="submit" id="button" name="inNewConf_<& name &>" id="inNewConf_<& name &>" value="inNewConf_<& name &>"><: Make New Conf :></button></td>
-					<@ CSFR_Tag @>	
 					</form>
 					<form action="./?module=SSL_manager&action=Delete" method="post">
 					<td><input type="hidden" name="inName" value="<& name &>">
@@ -118,7 +112,48 @@
 	<% if isBought %>
     <div class="zgrid_wrapper">
         <h2><: SSL Manager :></h2>
-		Not yet
+		
+		<table class="table table-striped">
+							<tr>
+                                <th nowrap="nowrap"><: Key :>:</th>
+                                <td>
+								<form action="./?module=SSL_manager&action=Addssl" method="post">
+								<@ Key @>
+								<@ CSFR_Tag @>
+								</form>
+                                </td>
+                            </tr>
+							<form action="./?module=SSL_manager&action=CreateSSL" method="post" enctype="multipart/form-data">
+							<tr>
+                                <th nowrap="nowrap"><: Domain :>:</th>
+                                <td>
+                                    <select name="inDomain" id="inDomain">
+                                        <option value="" selected="selected">-- <: Select a domain :> --</option>
+                                        <% loop DomainList %>
+                                        <option value="<& domain &>"><& domain &></option>
+                                        <% endloop %>
+                                    </select>
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Web Server certificate :>:</th>
+                                <td>
+								<input type="file" name="inWCA" id="inWCA" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Intermediate CA :>:</th>
+                                <td>
+								<input type="file" name="inICA" id="inICA" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><button class="button-loader btn btn-primary" type="submit" id="button" name="inCreateSSL" id="inCreateSSL"><: Save :></button></th>
+                                <td></td>
+                            </tr>
+							</table>
+				<@ CSFR_Tag @>
+			</form>
 		</div>
 	<% endif %>
 

@@ -109,93 +109,6 @@ class module_controller extends ctrl_module
 		return true;
 		}
 		
-		static function ExecuteCustomSSL($domain, $path, $name, $address, $city, $country, $company)
-		{
-			global $zdbh;
-		global $controller;
-		$currentuser = ctrl_users::GetUserDetail();
-		$formvars = $controller->GetAllControllerRequests('FORM');
-		$rootdir = str_replace('.', '_', $domain);
-		
-		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/") ) {
-				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/", 0777);
-			}
-		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/". $rootdir ."/") ) {
-				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/". $rootdir ."/", 0777);
-			} else {
-			self::$error = true;
-			return false;
-			}
-			// GET user info
-		
-		 $dn = array(
-								"countryName" => "$country",
-								"stateOrProvinceName" => "$name",
-								"localityName" => "$city",
-								"organizationName" => "$company",
-								"commonName" => "$domain",
-								"emailAddress" => "$address"
-							); 		
-		// Make Key
-		
-		//$config = array('private_key_bits' => 4096);
-		
-		$privkey = openssl_pkey_new();
-		
-		// Generate a certificate signing request
-		$csr = openssl_csr_new($dn, $privkey);
-		
-		$config = array("digest_alg" => "sha256");
-		
-		$sscert = openssl_csr_sign($csr, null, $privkey, 365, $config);
-		
-		//openssl_csr_export($csr, $csrout);
-		//openssl_x509_export($sscert, $certout);
-		//openssl_pkey_export($privkey, $pkeyout, $password);
-		
-		openssl_x509_export_to_file($sscert, "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/" .$rootdir ."/". $domain .".crt");
-		openssl_pkey_export_to_file($privkey, "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/" .$rootdir ."/". $domain .".key");
-		
-			// now write the contents to the file
-			$handle = fopen("/etc/sentora/panel/users_ssl/" . $domain . ".conf", "w+");
-			$write = "<VirtualHost *:443>\n";
-			fwrite($handle, $write);
-			$write = "ServerAdmin $address\n";
-			fwrite($handle, $write);
-			$write = "ServerName $domain\n";
-			fwrite($handle, $write);
-			$write = "DocumentRoot $path\n";
-			fwrite($handle, $write);
-			$write = "SSLEngine on\n";
-			fwrite($handle, $write);
-			$write = "SSLCertificateFile /var/sentora/hostdata/$currentuser[username]/ssl/$rootdir/$domain.crt\n";
-			fwrite($handle, $write);
-			$write = "SSLCertificateKeyFile /var/sentora/hostdata/$currentuser[username]/ssl/$rootdir/$domain.key\n";
-			fwrite($handle, $write);
-			$write = "SSLProtocol -All +TLSv1 +TLSv1.1 +TLSv1.2\n";
-			fwrite($handle, $write);
-			$write = "SSLCipherSuite ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM;\n";
-			fwrite($handle, $write);
-			$write = "<Directory '$path'>\n";
-			fwrite($handle, $write);
-			$write = "Options +FollowSymLinks -Indexes\n";
-			fwrite($handle, $write);
-			$write = "AllowOverride All\n";
-			fwrite($handle, $write);
-			$write = "Require all granted\n";
-			fwrite($handle, $write);
-			$write = "</Directory>\n";
-			fwrite($handle, $write);
-			$write = "</VirtualHost>\n";
-			fwrite($handle, $write);
-			fclose($handle);			
-			// now finish
-			// tell apcahe to reload as soon as possible
-			self::SetWriteApacheConfigTrue();
-	self::$ok = true;	
-	return true;
-		}
-		
 	 static function ExecuteMakessl($domain, $name, $address, $city, $country, $company)
     {
 		global $zdbh;
@@ -317,6 +230,9 @@ class module_controller extends ctrl_module
 			if($currentuser["username"] == "zadmin") {
 					$name = ctrl_options::GetSystemOption('sentora_domain');
 				$res[] = array('domain' => "$name");
+				$name = strstr($name, '.');
+				$res[] = array('domain' => "webmail"."$name");
+				$res[] = array('domain' => "pma"."$name");
 				}
             while ($rowdomains = $sql->fetch()) {
                 $res[] = array('domain' => $rowdomains['vh_name_vc']);
@@ -453,10 +369,6 @@ class module_controller extends ctrl_module
                 header("location: ./?module=" . $controller->GetCurrentModule() . '&show=ShowCSR');
                 exit;
             }
-			if (isset($formvars['inSSLCustom'])) {
-                header("location: ./?module=" . $controller->GetCurrentModule() . '&show=ShowCustom');
-                exit;
-            }
         return true;
     }
 	 static function doEdit()
@@ -511,18 +423,7 @@ class module_controller extends ctrl_module
         if (self::ExecuteMakessl($formvars['inDomain'], $formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany']))
         return true;
     }
-	 static function doAddCustum()
-    {
-        global $controller;
-        runtime_csfr::Protect();
-        $currentuser = ctrl_users::GetUserDetail();
-        $formvars = $controller->GetAllControllerRequests('FORM');
-		if (empty($formvars['inDomain']) || empty($formvars['inName']) || empty($formvars['inAddress']) || empty($formvars['inCity']) || empty($formvars['inCountry']) || empty($formvars['inCompany'])) { 
-		self::$empty = true;
-		return false; }
-        if (self::ExecuteCustomSSL($formvars['inDomain'], $formvars['inPath'] ,$formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany']))
-        return true;
-    }
+	
 	 static function getDomainList()
     {
         $currentuser = ctrl_users::GetUserDetail();
@@ -535,18 +436,12 @@ class module_controller extends ctrl_module
         $urlvars = $controller->GetAllControllerRequests('URL');
         return (isset($urlvars['show'])) && ($urlvars['show'] == "ShowCSR");
     }
+	
 	static function getisShowSelf()
     {
         global $controller;
         $urlvars = $controller->GetAllControllerRequests('URL');
         return (isset($urlvars['show'])) && ($urlvars['show'] == "ShowSelf");
-    }
-	
-	static function getisShowCustom()
-    {
-        global $controller;
-        $urlvars = $controller->GetAllControllerRequests('URL');
-        return (isset($urlvars['show'])) && ($urlvars['show'] == "ShowCustom");
     }
 	
 	static function getisBought()

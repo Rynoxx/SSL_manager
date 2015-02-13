@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <module>
     <name>SSL Manager</name>
-    <version>102</version>
-    <defaultcat>Reseller</defaultcat>
+    <version>103</version>
+    <defaultcat>Domain Management</defaultcat>
     <desc>Mange you certificate</desc>
     <authorname>Diablo925</authorname>
     <authoremail>carsten@alio.dk</authoremail>

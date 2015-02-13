@@ -12,5 +12,5 @@ Allows easy to make certificate
 Module is edit by Diablo925 [@github](https://github.com/Diablo925) 
 
 ##Version updates
-1.0.0 Uploadet to Github
+1.0.0 Uploadet to Github<br />
 1.0.1 Alot of change and new features

@@ -8,6 +8,7 @@ class module_controller extends ctrl_module
 		static $delok;
 		static $keyadd;
 		static $download;
+		static $empty;
 		
     /**
      * The 'worker' methods.
@@ -83,7 +84,6 @@ class module_controller extends ctrl_module
 	 static function ExecuteDownload($domain, $username)
 	 {
 		set_time_limit(0);
-		ini_set('memory_limit', '256M');
 		global $zdbh;
 		global $controller;
 		$domain = str_replace('.', '_', $domain);
@@ -106,7 +106,6 @@ class module_controller extends ctrl_module
 		ob_end_flush();
 		readfile($filepath.$filename);
 		unlink($temp_dir . $backupname . ".zip");
-		self::$download = true;
 		return true;
 		}
 		
@@ -332,6 +331,9 @@ class module_controller extends ctrl_module
 	{
 	    global $zdbh;
 		global $controller;
+		if (!is_dir("/var/sentora/hostdata/". $uname ."/ssl/") ) {
+				mkdir("/var/sentora/hostdata/". $uname ."/ssl/", 0777);
+			}
 		$dir = "/var/sentora/hostdata/$uname/ssl/";
 		if(substr($dir, -1) != "/") $dir .= "/";
 		$d = @dir($dir);
@@ -360,8 +362,10 @@ class module_controller extends ctrl_module
 		$currentuser = ctrl_users::GetUserDetail();
 		$formvars = $controller->GetAllControllerRequests('FORM');
 		$domain = $formvars["inDomain"];
-		
 		$rootdir = str_replace('.', '_', $domain);
+		if (empty($_FILES["inkey"]["name"]) || empty($_FILES["inWCA"]["name"])) { 
+		self::$empty = true;
+		return false; }
 		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/") ) {
 				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/", 0777);
 			}
@@ -458,7 +462,6 @@ class module_controller extends ctrl_module
 	 static function doEdit()
     {
         global $controller;
-        runtime_csfr::Protect();
         $currentuser = ctrl_users::GetUserDetail();
         $formvars = $controller->GetAllControllerRequests('FORM');
         if (self::ExecuteDownload($formvars['inName'], $currentuser["username"]))
@@ -480,6 +483,9 @@ class module_controller extends ctrl_module
         runtime_csfr::Protect();
         $currentuser = ctrl_users::GetUserDetail();
         $formvars = $controller->GetAllControllerRequests('FORM');
+		if (empty($formvars['inDomain']) || empty($formvars['inName']) || empty($formvars['inAddress']) || empty($formvars['inCity']) || empty($formvars['inCountry']) || empty($formvars['inCompany'])) { 
+		self::$empty = true;
+		return false; }
         if (self::ExecuteCSR($formvars['inDomain'], $formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany'], $formvars['inPassword']))
         return true;
     }
@@ -499,6 +505,9 @@ class module_controller extends ctrl_module
         runtime_csfr::Protect();
         $currentuser = ctrl_users::GetUserDetail();
         $formvars = $controller->GetAllControllerRequests('FORM');
+		if (empty($formvars['inDomain']) || empty($formvars['inName']) || empty($formvars['inAddress']) || empty($formvars['inCity']) || empty($formvars['inCountry']) || empty($formvars['inCompany'])) { 
+		self::$empty = true;
+		return false; }
         if (self::ExecuteMakessl($formvars['inDomain'], $formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany']))
         return true;
     }
@@ -508,6 +517,9 @@ class module_controller extends ctrl_module
         runtime_csfr::Protect();
         $currentuser = ctrl_users::GetUserDetail();
         $formvars = $controller->GetAllControllerRequests('FORM');
+		if (empty($formvars['inDomain']) || empty($formvars['inName']) || empty($formvars['inAddress']) || empty($formvars['inCity']) || empty($formvars['inCountry']) || empty($formvars['inCompany'])) { 
+		self::$empty = true;
+		return false; }
         if (self::ExecuteCustomSSL($formvars['inDomain'], $formvars['inPath'] ,$formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany']))
         return true;
     }
@@ -560,6 +572,9 @@ class module_controller extends ctrl_module
         }
 		if (self::$error) {
             return ui_sysmessage::shout(ui_language::translate("A certificate with that name already exists must be erased first."), "zannounceerror");
+        }
+		if (self::$empty) {
+            return ui_sysmessage::shout(ui_language::translate("A field was empty not allowed"), "zannounceerror");
         }
 		if (self::$keyadd) {
             return ui_sysmessage::shout(ui_language::translate("Certificate Signing Request is made and sent to the mail you have enter"), "zannounceok");

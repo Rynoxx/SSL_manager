@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <module>
     <name>SSL Manager</name>
-    <version>101</version>
+    <version>102</version>
     <defaultcat>Reseller</defaultcat>
-    <desc>Add SSL to you domain</desc>
+    <desc>Mange you certificate</desc>
     <authorname>Diablo925</authorname>
     <authoremail>carsten@alio.dk</authoremail>
     <authorurl>http://Alio.dk/</authorurl>

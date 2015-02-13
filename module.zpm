@@ -13,7 +13,7 @@
 	<@ Result @>
 	
 	<form action="./?module=SSL_manager&action=select" method="post">
-	<button class="button btn btn-primary" id="btn_sh" onClick="return ShowHide()"><: Show My SSL :></button>
+	<button class="button btn btn-primary" id="btn_sh" onClick="return ShowHide()"><: Show My certificate :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLself" id="inSSLself" value="inSSLself"><: Self signed :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLCSR" id="inSSLCSR" value="inSSLCSR"><: Certificate Signing Request :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLbought" id="inSSLbought" value="inSSLbought"><: Bought :></button>
@@ -22,7 +22,7 @@
 	</form>
 	
 	<div class="zgrid_wrapper" id="ColSSL" style="visibility:collapse">
-	<h2><: My SSL :></h2>
+	<h2><: My certificate :></h2>
 	<script type="text/javascript">
           var ShowSSL = false;
           function ShowHide()
@@ -31,19 +31,19 @@
               if (ShowSSL)
               { 
                   document.getElementById('ColSSL').style.visibility = 'visible';
-                  document.getElementById('btn_sh').innerHTML = 'Hide My SSL';
+                  document.getElementById('btn_sh').innerHTML = 'Hide My certificate';
               }
               else
               {
                   document.getElementById('ColSSL').style.visibility = 'collapse';
-                  document.getElementById('btn_sh').innerHTML = 'Show My SSL';
+                  document.getElementById('btn_sh').innerHTML = 'Show My certificate';
               }
               return false;
           }
         </script>
 		<table class="table table-striped">
 		<tr>
-			<th><: SSL Name :></th>
+			<th><: Domain :></th>
 			<th></th>
 			<th></th>
 		</tr>
@@ -53,7 +53,6 @@
 					<form action="./?module=SSL_manager&action=Edit" method="post">
 					<td><input type="hidden" name="inName" value="<& name &>">
 					<button class="btn btn-primary" type="submit" id="button" name="inDownload_<& name &>" id="inDownload_<& name &>" value="inDownload_<& name &>"><: Download :></button></td>
-					<@ CSFR_Tag @>
 					</form>
 					<form action="./?module=SSL_manager&action=Delete" method="post">
 					<td><input type="hidden" name="inName" value="<& name &>">
@@ -143,7 +142,7 @@
                                         <% loop DomainList %>
                                         <option value="<& domain &>"><& domain &></option>
                                         <% endloop %>
-                                    </select>
+                                    </select><br>
                                 </td>
                             </tr>
 							<tr>

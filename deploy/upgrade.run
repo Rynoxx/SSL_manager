@@ -17,7 +17,7 @@ require_once('dryden/fs/director.class.php');
 require_once('inc/dbc.inc.php');
 
 
-UpgradeModule('101', 'SSL_manager');
+UpgradeModule('102', 'SSL_manager');
 
 function UpgradeModule($newversion, $module){
     global $zdbh;

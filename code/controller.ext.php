@@ -4,8 +4,10 @@ class module_controller extends ctrl_module
 {
 		
 		static $ok;
-		static $newconfok;
 		static $error;
+		static $delok;
+		static $keyadd;
+		static $download;
 		
     /**
      * The 'worker' methods.
@@ -25,46 +27,59 @@ class module_controller extends ctrl_module
      reset($objects);
      rmdir($dir);
 	 unlink("/etc/sentora/panel/users_ssl/" . $domain . ".conf");
+	
 		 return true;
+		 	self::$delok = true;
 	 }
 	 
-	 static function ExecuteMakekey()
+	 static function ExecuteCSR($domain, $name, $address, $city, $country, $company, $password)
 	{
 		global $zdbh;
 		global $controller;
 		$currentuser = ctrl_users::GetUserDetail();
 		$formvars = $controller->GetAllControllerRequests('FORM');
-		$password = fs_director::GenerateRandomPassword(8, 4);
 		$config = array('private_key_bits' => 4096);
+		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/key/") ) {
+				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/key/", 0777);
+			}
+		$dn = array(
+								"countryName" => "$country",
+								"stateOrProvinceName" => "$name",
+								"localityName" => "$city",
+								"organizationName" => "$company",
+								"commonName" => "$domain",
+								"emailAddress" => "$address"
+							);
 		
 		$privkey = openssl_pkey_new($config);
+		$csr = openssl_csr_new($dn, $privkey);
 		
+		openssl_csr_export($csr, $csrout);
 		openssl_pkey_export($privkey, $pkeyout, $password);
 		
-		openssl_pkey_export_to_file($privkey, "/var/sentora/hostdata/". $currentuser["username"] ."/key/ssl.key");
+		openssl_pkey_export_to_file($privkey, "/var/sentora/hostdata/". $currentuser["username"] ."/key/".$domain.".key");
 		
-		$email = $currentuser["email"];
-			$emailsubject = "You SSL key";
-            $emailbody = "Hi $currentuser[username]\n\nHere is you key the password is:\n\n $password\n\nRemember to save this mail or remember the password\n\n\n$pkeyout";
+		$email = $address;
+			$emailsubject = "Certificate Signing Request";
+            $emailbody = "Hi $currentuser[username]\n\n
+			---------------------------------CSR-------------------------------\n\n\n
+			$csrout
+			\n\n\n
+			---------------------------------CSR END-------------------------------";
+		
 
             $phpmailer = new sys_email();
             $phpmailer->Subject = $emailsubject;
             $phpmailer->Body = $emailbody;
+			$phpmailer->AddAttachment("/var/sentora/hostdata/". $currentuser["username"] ."/key/".$domain.".key");
             $phpmailer->AddAddress($email);
             $phpmailer->SendEmail();
-			
+			unlink("/var/sentora/hostdata/". $currentuser["username"] ."/key/".$domain.".key");
+			rmdir("/var/sentora/hostdata/". $currentuser["username"] ."/key/");
+			self::$keyadd = true;
 			return true;
 	}
 	
-	static function ExecuteDeletekey()
-	 {
-		global $zdbh;
-		global $controller;
-		$currentuser = ctrl_users::GetUserDetail();
-		$formvars = $controller->GetAllControllerRequests('FORM');
-		unlink("/var/sentora/hostdata/". $currentuser["username"] ."/key/ssl.key");
-		return true;
-	 }
 	 static function ExecuteDownload($domain, $username)
 	 {
 		set_time_limit(0);
@@ -91,11 +106,98 @@ class module_controller extends ctrl_module
 		ob_end_flush();
 		readfile($filepath.$filename);
 		unlink($temp_dir . $backupname . ".zip");
+		self::$download = true;
 		return true;
-		self::$delok = true;
 		}
 		
-	 static function ExecuteMakessl($domain, $name, $address, $city, $country, $company, $password)
+		static function ExecuteCustomSSL($domain, $path, $name, $address, $city, $country, $company)
+		{
+			global $zdbh;
+		global $controller;
+		$currentuser = ctrl_users::GetUserDetail();
+		$formvars = $controller->GetAllControllerRequests('FORM');
+		$rootdir = str_replace('.', '_', $domain);
+		
+		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/") ) {
+				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/", 0777);
+			}
+		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/". $rootdir ."/") ) {
+				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/ssl/". $rootdir ."/", 0777);
+			} else {
+			self::$error = true;
+			return false;
+			}
+			// GET user info
+		
+		 $dn = array(
+								"countryName" => "$country",
+								"stateOrProvinceName" => "$name",
+								"localityName" => "$city",
+								"organizationName" => "$company",
+								"commonName" => "$domain",
+								"emailAddress" => "$address"
+							); 		
+		// Make Key
+		
+		//$config = array('private_key_bits' => 4096);
+		
+		$privkey = openssl_pkey_new();
+		
+		// Generate a certificate signing request
+		$csr = openssl_csr_new($dn, $privkey);
+		
+		$config = array("digest_alg" => "sha256");
+		
+		$sscert = openssl_csr_sign($csr, null, $privkey, 365, $config);
+		
+		//openssl_csr_export($csr, $csrout);
+		//openssl_x509_export($sscert, $certout);
+		//openssl_pkey_export($privkey, $pkeyout, $password);
+		
+		openssl_x509_export_to_file($sscert, "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/" .$rootdir ."/". $domain .".crt");
+		openssl_pkey_export_to_file($privkey, "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/" .$rootdir ."/". $domain .".key");
+		
+			// now write the contents to the file
+			$handle = fopen("/etc/sentora/panel/users_ssl/" . $domain . ".conf", "w+");
+			$write = "<VirtualHost *:443>\n";
+			fwrite($handle, $write);
+			$write = "ServerAdmin $address\n";
+			fwrite($handle, $write);
+			$write = "ServerName $domain\n";
+			fwrite($handle, $write);
+			$write = "DocumentRoot $path\n";
+			fwrite($handle, $write);
+			$write = "SSLEngine on\n";
+			fwrite($handle, $write);
+			$write = "SSLCertificateFile /var/sentora/hostdata/$currentuser[username]/ssl/$rootdir/$domain.crt\n";
+			fwrite($handle, $write);
+			$write = "SSLCertificateKeyFile /var/sentora/hostdata/$currentuser[username]/ssl/$rootdir/$domain.key\n";
+			fwrite($handle, $write);
+			$write = "SSLProtocol -All +TLSv1 +TLSv1.1 +TLSv1.2\n";
+			fwrite($handle, $write);
+			$write = "SSLCipherSuite ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM;\n";
+			fwrite($handle, $write);
+			$write = "<Directory '$path'>\n";
+			fwrite($handle, $write);
+			$write = "Options +FollowSymLinks -Indexes\n";
+			fwrite($handle, $write);
+			$write = "AllowOverride All\n";
+			fwrite($handle, $write);
+			$write = "Require all granted\n";
+			fwrite($handle, $write);
+			$write = "</Directory>\n";
+			fwrite($handle, $write);
+			$write = "</VirtualHost>\n";
+			fwrite($handle, $write);
+			fclose($handle);			
+			// now finish
+			// tell apcahe to reload as soon as possible
+			self::SetWriteApacheConfigTrue();
+	self::$ok = true;	
+	return true;
+		}
+		
+	 static function ExecuteMakessl($domain, $name, $address, $city, $country, $company)
     {
 		global $zdbh;
 		global $controller;
@@ -136,9 +238,9 @@ class module_controller extends ctrl_module
 		
 		$sscert = openssl_csr_sign($csr, null, $privkey, 365, $config);
 		
-		openssl_csr_export($csr, $csrout);
-		openssl_x509_export($sscert, $certout);
-		openssl_pkey_export($privkey, $pkeyout, $password);
+		//openssl_csr_export($csr, $csrout);
+		//openssl_x509_export($sscert, $certout);
+		//openssl_pkey_export($privkey, $pkeyout, $password);
 		
 		openssl_x509_export_to_file($sscert, "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/" .$rootdir ."/". $domain .".crt");
 		openssl_pkey_export_to_file($privkey, "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/" .$rootdir ."/". $domain .".key");
@@ -226,26 +328,6 @@ class module_controller extends ctrl_module
         }
     }
 	
-	static function GetKey()
-    {
-		global $zdbh;
-		global $controller;
-        $currentuser = ctrl_users::GetUserDetail();
-		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/key/") ) {
-				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/key/", 0777);
-			}
-		$dir = "/var/sentora/hostdata/$currentuser[username]/key";
-		$d = @dir($dir);
-    	while(false !== ($entry = $d->read())) {
-			if($entry[0] == ".") continue;
-			$output = $entry;
-}
-    $d->close();
-	 if(isset($output)){ 
-	 $res = $output . '<button class="button-loader btn btn-primary" type="submit" id="button" name="indeletekey" id="indeletekey">Delete key</button>'; } else { $res = '<button class="button-loader btn btn-primary" type="submit" id="button" name="inMakekey" id="inMakekey">Make new key</button>'; }
-		return $res;
-	}
-	
 	 static function ListSSL($uname)
 	{
 	    global $zdbh;
@@ -271,7 +353,7 @@ class module_controller extends ctrl_module
      * Webinterface sudo methods.
      */ 
 	
-	static function doCreateSSL()
+	static function doUploadSSL()
 	{
 		global $zdbh;
 		global $controller;
@@ -289,12 +371,13 @@ class module_controller extends ctrl_module
 			self::$error = true;
 			return false;
 			}
-			copy("/var/sentora/hostdata/". $currentuser["username"] ."/key/ssl.key", "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/". $rootdir ."/". $domain .".key");
 			
 			$target_dir = "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/". $rootdir ."/";
 			
+			$uploadkey = $target_dir . $domain . ".key";
 			$uploadwcrt = $target_dir . $domain . ".crt";
 			$uploadicrt = $target_dir . "intermediate.crt";
+			move_uploaded_file($_FILES["inkey"]["tmp_name"], $uploadkey);
 			move_uploaded_file($_FILES["inWCA"]["tmp_name"], $uploadwcrt);
 			move_uploaded_file($_FILES["inICA"]["tmp_name"], $uploadicrt);
 			
@@ -343,8 +426,7 @@ class module_controller extends ctrl_module
 			// now finish
 			// tell apcahe to reload as soon as possible
 			self::SetWriteApacheConfigTrue();
-	self::$newconfok = true;
-			
+			self::$ok = true;
 		return true;
 	}
 	
@@ -363,28 +445,16 @@ class module_controller extends ctrl_module
                 header("location: ./?module=" . $controller->GetCurrentModule() . '&show=Bought');
                 exit;
             }
+			if (isset($formvars['inSSLCSR'])) {
+                header("location: ./?module=" . $controller->GetCurrentModule() . '&show=ShowCSR');
+                exit;
+            }
+			if (isset($formvars['inSSLCustom'])) {
+                header("location: ./?module=" . $controller->GetCurrentModule() . '&show=ShowCustom');
+                exit;
+            }
         return true;
     }
-	 
-	 static function doAddssl()
-	 {
-		 global $controller;
-        runtime_csfr::Protect();
-        $currentuser = ctrl_users::GetUserDetail();
-        $formvars = $controller->GetAllControllerRequests('FORM');
-			
-			if (isset($formvars['inMakekey'])) {
-			if (self::ExecuteMakekey())
-			header("location: ./?module=" . $controller->GetCurrentModule() . '&show=Bought');
-                exit;
-			}
-			if (isset($formvars['indeletekey'])) {
-			if (self::ExecuteDeletekey())
-			header("location: ./?module=" . $controller->GetCurrentModule() . '&show=Bought');
-                exit;
-			}
-			return true;
-	 }
 	 static function doEdit()
     {
         global $controller;
@@ -404,7 +474,15 @@ class module_controller extends ctrl_module
         if (self::ExecuteDelete($formvars['inName'], $currentuser["username"]))
         return true;
     }
-	 
+	 static function doMakeCSR()
+    {
+        global $controller;
+        runtime_csfr::Protect();
+        $currentuser = ctrl_users::GetUserDetail();
+        $formvars = $controller->GetAllControllerRequests('FORM');
+        if (self::ExecuteCSR($formvars['inDomain'], $formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany'], $formvars['inPassword']))
+        return true;
+    }
 	 
 	 
 	
@@ -421,21 +499,42 @@ class module_controller extends ctrl_module
         runtime_csfr::Protect();
         $currentuser = ctrl_users::GetUserDetail();
         $formvars = $controller->GetAllControllerRequests('FORM');
-        if (self::ExecuteMakessl($formvars['inDomain'], $formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany'], $formvars['inPassword']))
+        if (self::ExecuteMakessl($formvars['inDomain'], $formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany']))
         return true;
     }
-		
+	 static function doAddCustum()
+    {
+        global $controller;
+        runtime_csfr::Protect();
+        $currentuser = ctrl_users::GetUserDetail();
+        $formvars = $controller->GetAllControllerRequests('FORM');
+        if (self::ExecuteCustomSSL($formvars['inDomain'], $formvars['inPath'] ,$formvars['inName'], $formvars['inAddress'], $formvars['inCity'], $formvars['inCountry'], $formvars['inCompany']))
+        return true;
+    }
 	 static function getDomainList()
     {
         $currentuser = ctrl_users::GetUserDetail();
         return self::ListDomains($currentuser['userid']);
     }
 	
+	static function getisShowCSR()
+    {
+        global $controller;
+        $urlvars = $controller->GetAllControllerRequests('URL');
+        return (isset($urlvars['show'])) && ($urlvars['show'] == "ShowCSR");
+    }
 	static function getisShowSelf()
     {
         global $controller;
         $urlvars = $controller->GetAllControllerRequests('URL');
         return (isset($urlvars['show'])) && ($urlvars['show'] == "ShowSelf");
+    }
+	
+	static function getisShowCustom()
+    {
+        global $controller;
+        $urlvars = $controller->GetAllControllerRequests('URL');
+        return (isset($urlvars['show'])) && ($urlvars['show'] == "ShowCustom");
     }
 	
 	static function getisBought()
@@ -454,16 +553,19 @@ class module_controller extends ctrl_module
 	static function getResult()
     {
 		 if (self::$ok) {
-            return ui_sysmessage::shout(ui_language::translate("You SSL has been made now wait in about 5 min"), "zannounceok");
+            return ui_sysmessage::shout(ui_language::translate("You SSL has been made now wait in about 5 min."), "zannounceok");
         }
-		if (self::$newconfok) {
-            return ui_sysmessage::shout(ui_language::translate("A new conf has been made"), "zannounceok");
-        }
-		if (self::$newconfok) {
-            return ui_sysmessage::shout(ui_language::translate("The selectet Certificate has been deletet"), "zannounceerror");
+		if (self::$delok) {
+            return ui_sysmessage::shout(ui_language::translate("The selectet Certificate has been deletet."), "zannounceerror");
         }
 		if (self::$error) {
-            return ui_sysmessage::shout(ui_language::translate("A certificate with that name already exists must be erased first "), "zannounceerror");
+            return ui_sysmessage::shout(ui_language::translate("A certificate with that name already exists must be erased first."), "zannounceerror");
+        }
+		if (self::$keyadd) {
+            return ui_sysmessage::shout(ui_language::translate("Certificate Signing Request is made and sent to the mail you have enter"), "zannounceok");
+        }
+		if (self::$download) {
+            return ui_sysmessage::shout(ui_language::translate("Your certificate is ready to be downloadet."), "zannounceok");
         }
         return;
     }

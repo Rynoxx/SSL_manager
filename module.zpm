@@ -13,13 +13,34 @@
 	<@ Result @>
 	
 	<form action="./?module=SSL_manager&action=select" method="post">
+	<button class="button btn btn-primary" id="btn_sh" onClick="return ShowHide()"><: Show My SSL :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLself" id="inSSLself" value="inSSLself"><: Self signed :></button>
+	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLCSR" id="inSSLCSR" value="inSSLCSR"><: Certificate Signing Request :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLbought" id="inSSLbought" value="inSSLbought"><: Bought :></button>
+	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLCustom" id="inSSLCustom" value="inSSLCustom"><: Custom :></button>
 	<@ CSFR_Tag @>
 	</form>
 	
-	<div class="zgrid_wrapper">
+	<div class="zgrid_wrapper" id="ColSSL" style="visibility:collapse">
 	<h2><: My SSL :></h2>
+	<script type="text/javascript">
+          var ShowSSL = false;
+          function ShowHide()
+          {
+              ShowSSL = !ShowSSL;
+              if (ShowSSL)
+              { 
+                  document.getElementById('ColSSL').style.visibility = 'visible';
+                  document.getElementById('btn_sh').innerHTML = 'Hide My SSL';
+              }
+              else
+              {
+                  document.getElementById('ColSSL').style.visibility = 'collapse';
+                  document.getElementById('btn_sh').innerHTML = 'Show My SSL';
+              }
+              return false;
+          }
+        </script>
 		<table class="table table-striped">
 		<tr>
 			<th><: SSL Name :></th>
@@ -43,11 +64,10 @@
 				<% endloop %>	
 		</table>	
 	</div>
-	
-	<% if isShowSelf %>
+	<% if isShowCSR %>
     <div class="zgrid_wrapper">
-        <h2><: SSL Manager :></h2>
-        <form action="./?module=SSL_manager&action=Makenew" method="post">
+        <h2><: Certificate Signing Request :></h2>
+        <form action="./?module=SSL_manager&action=MakeCSR" method="post">
             <table class="table table-striped">
                             <tr>
                                 <th nowrap="nowrap"><: Domain :>:</th>
@@ -109,21 +129,142 @@
     </div>
     <% endif %>
 	
-	<% if isBought %>
+	
+	<% if isShowSelf %>
     <div class="zgrid_wrapper">
-        <h2><: SSL Manager :></h2>
-		
-		<table class="table table-striped">
-							<tr>
-                                <th nowrap="nowrap"><: Key :>:</th>
+        <h2><: Self signed certificate :></h2>
+        <form action="./?module=SSL_manager&action=Makenew" method="post">
+            <table class="table table-striped">
+                            <tr>
+                                <th nowrap="nowrap"><: Domain :>:</th>
                                 <td>
-								<form action="./?module=SSL_manager&action=Addssl" method="post">
-								<@ Key @>
-								<@ CSFR_Tag @>
-								</form>
+                                    <select name="inDomain" id="inDomain">
+                                        <option value="" selected="selected">-- <: Select a domain :> --</option>
+                                        <% loop DomainList %>
+                                        <option value="<& domain &>"><& domain &></option>
+                                        <% endloop %>
+                                    </select>
                                 </td>
                             </tr>
-							<form action="./?module=SSL_manager&action=CreateSSL" method="post" enctype="multipart/form-data">
+							<tr>
+                                <th nowrap="nowrap"><: Your Name :>:</th>
+                                <td>
+                                    <input type="text" name="inName" id="inName" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Domain Email :>:</th>
+                                <td>
+                                    <input type="text" name="inAddress" id="inAddress" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: City :>:</th>
+                                <td>
+                                    <input type="text" name="inCity" id="inCity" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Country :>:</th>
+                                <td>
+									<select name="inCountry" id="inCountry">
+                                    <option value="" selected="selected">-- <: Select country :> --</option>
+										<@ ListCountry @>
+									</select>
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Company :>:</th>
+                                <td>
+									<input type="text" name="inCompany" id="inCompany" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><button class="button-loader btn btn-primary" type="submit" id="button" name="inSave" id="inSave"><: Save :></button></th>
+                                <td></td>
+                            </tr>
+							</table>
+            <@ CSFR_Tag @>
+        </form>
+    </div>
+    <% endif %>
+	
+	<% if isShowCustom %>
+	<div class="zgrid_wrapper">
+        <h2><: Custom certificate :></h2>
+		<form action="./?module=SSL_manager&action=AddCustum" method="post" enctype="multipart/form-data">
+		<h3><: Domain Info :></h3>
+		<table class="table table-striped">
+		 					<tr>
+                                <th nowrap="nowrap"><: Domain :>:</th>
+                                <td>
+                                   <input type="text" name="inDomain" id="inDomain" /> <b>No HTTP:// OR HTTPS://</b>
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: path to website :>:</th>
+                                <td>
+                                   <input type="text" name="inPath" id="inPath" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"></th>
+                                <td>
+                                   Webmail path : <b>/etc/sentora/panel/etc/apps/webmail/</b> PHPMyAdmin path : <b>/etc/sentora/panel/etc/apps/phpmyadmin/</b>
+                                </td>
+                            </tr>
+							</table>
+							<h3><: Self sing certificate :></h3>
+							<table class="table table-striped">
+							<tr>
+                                <th nowrap="nowrap"><: Your Name :>:</th>
+                                <td>
+                                    <input type="text" name="inName" id="inName" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Domain Email :>:</th>
+                                <td>
+                                    <input type="text" name="inAddress" id="inAddress" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: City :>:</th>
+                                <td>
+                                    <input type="text" name="inCity" id="inCity" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Country :>:</th>
+                                <td>
+									<select name="inCountry" id="inCountry">
+                                    <option value="" selected="selected">-- <: Select country :> --</option>
+										<@ ListCountry @>
+									</select>
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Company :>:</th>
+                                <td>
+									<input type="text" name="inCompany" id="inCompany" />
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><button class="button-loader btn btn-primary" type="submit" id="button" name="inSave" id="inSave"><: Save :></button></th>
+                                <td></td>
+                            </tr>
+							</table>
+            <@ CSFR_Tag @>
+        </form>
+    </div>
+	<% endif %>
+	
+	
+	<% if isBought %>
+    <div class="zgrid_wrapper">
+        <h2><: Bought certificate :></h2>
+		<form action="./?module=SSL_manager&action=UploadSSL" method="post" enctype="multipart/form-data">
+		<table class="table table-striped">
 							<tr>
                                 <th nowrap="nowrap"><: Domain :>:</th>
                                 <td>
@@ -133,6 +274,12 @@
                                         <option value="<& domain &>"><& domain &></option>
                                         <% endloop %>
                                     </select>
+                                </td>
+                            </tr>
+							<tr>
+                                <th nowrap="nowrap"><: Certificate Key :>:</th>
+                                <td>
+								<input type="file" name="inkey" id="inkey" />
                                 </td>
                             </tr>
 							<tr>

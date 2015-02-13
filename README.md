@@ -1,4 +1,4 @@
-#SSL_manager 
+#SSL Manager 
 
 Version: 1.0.2<br />
 [Forums](http://forums.sentora.org/showthread.php?tid=1044) 

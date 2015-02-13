@@ -460,22 +460,19 @@ class module_controller extends ctrl_module
 	static function getResult()
     {
 		 if (self::$ok) {
-            return ui_sysmessage::shout(ui_language::translate("You SSL has been made now wait in about 5 min."), "zannounceok");
+            return ui_sysmessage::shout(ui_language::translate("You SSL has been made. It will be ready in about 5 min."), "zannounceok");
         }
 		if (self::$delok) {
-            return ui_sysmessage::shout(ui_language::translate("The selectet Certificate has been deletet."), "zannounceerror");
+            return ui_sysmessage::shout(ui_language::translate("The selected certificate has been deleted."), "zannounceerror");
         }
 		if (self::$error) {
-            return ui_sysmessage::shout(ui_language::translate("A certificate with that name already exists must be erased first."), "zannounceerror");
+            return ui_sysmessage::shout(ui_language::translate("A certificate with that name already exists."), "zannounceerror");
         }
 		if (self::$empty) {
-            return ui_sysmessage::shout(ui_language::translate("A field was empty not allowed"), "zannounceerror");
+            return ui_sysmessage::shout(ui_language::translate("An empty field is not allowed."), "zannounceerror");
         }
 		if (self::$keyadd) {
-            return ui_sysmessage::shout(ui_language::translate("Certificate Signing Request is made and sent to the mail you have enter"), "zannounceok");
-        }
-		if (self::$download) {
-            return ui_sysmessage::shout(ui_language::translate("Your certificate is ready to be downloadet."), "zannounceok");
+            return ui_sysmessage::shout(ui_language::translate("Certificate Signing Request was made and sent to the mail you have entered"), "zannounceok");
         }
         return;
     }

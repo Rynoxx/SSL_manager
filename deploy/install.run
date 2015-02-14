@@ -24,9 +24,9 @@ function installModule(){
 		global $zdbh;
 		global $controller;
 		
-		if (!is_dir("/etc/sentora/panel/users_ssl/")) {
-		mkdir("/etc/sentora/panel/users_ssl");
-		chmod('/etc/sentora/panel/users_ssl', 0777);
+		if (!is_dir("/etc/sentora/configs/apache/users_ssl/")) {
+		mkdir("/etc/sentora/configs/apache/users_ssl");
+		chmod('/etc/sentora/configs/apache/users_ssl', 0777);
 		rename("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
 		$fp = fopen("/etc/sentora/configs/apache/httpd.conf", "a");
 		$stringToWrite = "ServerName localhost\n";
@@ -83,7 +83,7 @@ function installModule(){
 		fwrite($fp, $stringToWrite);
 		$stringToWrite = "Include /etc/sentora/configs/apache/httpd-vhosts.conf\n";
 		fwrite($fp, $stringToWrite);
-		$stringToWrite = "Include /etc/sentora/panel/users_ssl/*.conf\n";
+		$stringToWrite = "IncludeOptional /etc/sentora/configs/apache/users_ssl/*.conf\n";
 		fwrite($fp, $stringToWrite);
 		fclose($fp);
 				$sql = $zdbh->prepare("UPDATE x_settings

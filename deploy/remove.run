@@ -24,8 +24,8 @@ function removeModule(){
     		global $zdbh;
 		global $controller;
 
-		if (is_dir("/etc/sentora/panel/users_ssl/")) {
-		rrmdir('/etc/sentora/panel/users_ssl/');
+		if (is_dir("/etc/sentora/configs/apache/users_ssl/")) {
+		rrmdir('/etc/sentora/configs/apache/users_ssl/');
 		unlink("/etc/sentora/configs/apache/httpd.conf");
 		rename("/etc/sentora/configs/apache/httpd.conf.bak", "/etc/sentora/configs/apache/httpd.conf");
 		$sql = $zdbh->prepare("UPDATE x_settings SET so_value_tx='true' WHERE so_name_vc='apache_changed'");

@@ -1,6 +1,6 @@
 #SSL Manager 
 
-Version: 1.0.3<br />
+Version: 1.0.4<br />
 [Forums](http://forums.sentora.org/showthread.php?tid=1044) 
 for comments, discussion, more information and community support.
 
@@ -16,3 +16,4 @@ Module is edit by Diablo925 [@github](https://github.com/Diablo925)
 1.0.1 Alot of change and new features<br />
 1.0.2 Small bug fixes<br />
 1.0.3 Remove and add<br />
+1.0.4 Change place of Users_ssl folder<br />

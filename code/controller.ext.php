@@ -27,8 +27,7 @@ class module_controller extends ctrl_module
      }
      reset($objects);
      rmdir($dir);
-	 unlink("/etc/sentora/panel/users_ssl/" . $domain . ".conf");
-	
+	 unlink("/etc/sentora/configs/apache/users_ssl/" . $domain . ".conf");
 		 return true;
 		 	self::$delok = true;
 	 }
@@ -158,7 +157,7 @@ class module_controller extends ctrl_module
 		openssl_pkey_export_to_file($privkey, "/var/sentora/hostdata/". $currentuser["username"] ."/ssl/" .$rootdir ."/". $domain .".key");
 		
 			// now write the contents to the file
-			$handle = fopen("/etc/sentora/panel/users_ssl/" . $domain . ".conf", "w+");
+			$handle = fopen("/etc/sentora/configs/apache/users_ssl/" . $domain . ".conf", "w+");
 			$write = "<VirtualHost *:443>\n";
 			fwrite($handle, $write);
 			$write = "ServerAdmin $address\n";
@@ -230,9 +229,6 @@ class module_controller extends ctrl_module
 			if($currentuser["username"] == "zadmin") {
 					$name = ctrl_options::GetSystemOption('sentora_domain');
 				$res[] = array('domain' => "$name");
-				$name = strstr($name, '.');
-				$res[] = array('domain' => "webmail"."$name");
-				$res[] = array('domain' => "pma"."$name");
 				}
             while ($rowdomains = $sql->fetch()) {
                 $res[] = array('domain' => $rowdomains['vh_name_vc']);
@@ -301,7 +297,7 @@ class module_controller extends ctrl_module
 			move_uploaded_file($_FILES["inWCA"]["tmp_name"], $uploadwcrt);
 			move_uploaded_file($_FILES["inICA"]["tmp_name"], $uploadicrt);
 			
-			$handle = fopen("/etc/sentora/panel/users_ssl/" . $domain . ".conf", "w+");
+			$handle = fopen("/etc/sentora/configs/apache/users_ssl/" . $domain . ".conf", "w+");
 			$write = "<VirtualHost *:443>\n";
 			fwrite($handle, $write);
 			$write = "ServerAdmin $currentuser[email]\n";

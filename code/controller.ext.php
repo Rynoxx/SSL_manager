@@ -38,7 +38,8 @@ class module_controller extends ctrl_module
 		global $controller;
 		$currentuser = ctrl_users::GetUserDetail();
 		$formvars = $controller->GetAllControllerRequests('FORM');
-		$config = array('private_key_bits' => 4096);
+		$config = array('digest_alg' => 'sha256', 'private_key_bits' => 4096, 'private_key_type' => OPENSSL_KEYTYPE_RSA,  'encrypt_key' => true);
+		$csrconfig = array('digest_alg' => 'sha256');
 		if (!is_dir("/var/sentora/hostdata/". $currentuser["username"] ."/key/") ) {
 				mkdir("/var/sentora/hostdata/". $currentuser["username"] ."/key/", 0777);
 			}
@@ -52,7 +53,7 @@ class module_controller extends ctrl_module
 							);
 		
 		$privkey = openssl_pkey_new($config);
-		$csr = openssl_csr_new($dn, $privkey);
+		$csr = openssl_csr_new($dn, $privkey, $csrconfig);
 		
 		openssl_csr_export($csr, $csrout);
 		openssl_pkey_export($privkey, $pkeyout, $password);

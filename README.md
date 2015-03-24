@@ -17,3 +17,4 @@ Module is edit by Diablo925 [@github](https://github.com/Diablo925)
 1.0.2 Small bug fixes<br />
 1.0.3 Remove and add<br />
 1.0.4 Change place of Users_ssl folder<br />
+1.0.5 and 1.0.6 Updatet the chipper remove RC4<br />

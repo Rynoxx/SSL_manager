@@ -181,7 +181,7 @@ class module_controller extends ctrl_module
 			fwrite($handle, $write);
 			$write = "SSLHonorCipherOrder on\n";
 			fwrite($handle, $write);
-			$write = "SSLCipherSuite EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4;\n";
+			$write = "SSLCipherSuite \"EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4\"\n";
 			fwrite($handle, $write);
 			if($domain == ctrl_options::GetSystemOption('sentora_domain')) { 
 			$write = "<Directory '/etc/sentora/panel/'>\n";
@@ -325,7 +325,7 @@ class module_controller extends ctrl_module
 			fwrite($handle, $write);
 			$write = "SSLHonorCipherOrder on\n";
 			fwrite($handle, $write);
-			$write = "SSLCipherSuite EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4;\n";
+			$write = "SSLCipherSuite \"EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4\"\n";
 			fwrite($handle, $write);
 			if($domain == ctrl_options::GetSystemOption('sentora_domain')) { 
 			$write = "<Directory '/etc/sentora/panel/'>\n";

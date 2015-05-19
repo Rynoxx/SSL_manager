@@ -14,11 +14,9 @@ require_once('dryden/ctrl/options.class.php');
 require_once('dryden/ctrl/auth.class.php');
 require_once('dryden/ctrl/users.class.php');
 require_once('dryden/fs/director.class.php');
+require_once('dryden/fs/filehandler.class.php');
 require_once('inc/dbc.inc.php');
 
-
-//install
-installModule();
 
 function installModule(){
 		global $zdbh;
@@ -26,8 +24,9 @@ function installModule(){
 
 		if (!is_dir("/etc/sentora/configs/apache/users_ssl/")) {
 		mkdir("/etc/sentora/configs/apache/users_ssl");
-		chmod('/etc/sentora/configs/apache/users_ssl', 0777);
-		//rename("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
+		chmod("/etc/sentora/configs/apache/users_ssl", 0777);
+		CopyFile("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
+		CopyFile("/etc/sentora/configs/apache/httpd-vhosts.conf", "/etc/sentora/configs/apache/httpd-vhosts.conf.bak");
 		$fp = fopen("/etc/sentora/configs/apache/httpd.conf", "a");
 		$stringToWrite = "\nIncludeOptional /etc/sentora/configs/apache/users_ssl/*.conf\n";
 		fwrite($fp, $stringToWrite);
@@ -38,4 +37,8 @@ function installModule(){
         		$sql->execute();
 		        }
 }
+
+//install
+installModule();
+
 ?>

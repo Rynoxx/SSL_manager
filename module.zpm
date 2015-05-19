@@ -204,19 +204,19 @@
                                 </td>
                             </tr>
 							<tr>
-                                <th nowrap="nowrap"><: Certificate Key :>:</th>
+                                <th nowrap="nowrap"><: Domain Signing Certificate Key(.key) :>:</th>
                                 <td>
 								<input type="file" name="inkey" id="inkey" />
                                 </td>
                             </tr>
 							<tr>
-                                <th nowrap="nowrap"><: Web Server certificate :>:</th>
+                                <th nowrap="nowrap"><: Signed Server Certificate(.cer) :>:</th>
                                 <td>
 								<input type="file" name="inWCA" id="inWCA" />
                                 </td>
                             </tr>
 							<tr>
-                                <th nowrap="nowrap"><: Intermediate CA :>:</th>
+                                <th nowrap="nowrap"><: CA Certificate (.cer) :>:</th>
                                 <td>
 								<input type="file" name="inICA" id="inICA" />
                                 </td>

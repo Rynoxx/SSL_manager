@@ -16,7 +16,7 @@
 	<button class="button btn btn-primary" id="btn_sh" onClick="return ShowHide()"><: Show My certificate :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLself" id="inSSLself" value="inSSLself"><: Self signed :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLCSR" id="inSSLCSR" value="inSSLCSR"><: Certificate Signing Request :></button>
-	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLbought" id="inSSLbought" value="inSSLbought"><: Bought :></button>
+	<button class="button-loader btn btn-primary" type="submit" id="button" name="inSSLbought" id="inSSLbought" value="inSSLbought"><: Install Signed Certificate :></button>
 	<@ CSFR_Tag @>
 	</form>
 	

@@ -25,8 +25,12 @@ function installModule(){
 		if (!is_dir("/etc/sentora/configs/apache/users_ssl/")) {
 		mkdir("/etc/sentora/configs/apache/users_ssl");
 		chmod("/etc/sentora/configs/apache/users_ssl", 0777);
-		CopyFile("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
-		CopyFile("/etc/sentora/configs/apache/httpd-vhosts.conf", "/etc/sentora/configs/apache/httpd-vhosts.conf.bak");
+		if(!file_exists("/etc/sentora/configs/apache/httpd.conf.bak") {
+		copy ("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak)";
+		}
+		if(!file_exists("/etc/sentora/configs/apache/httpd-vhosts.conf.bak") {
+		copy ("/etc/sentora/configs/apache/httpd-vhosts.conf", "/etc/sentora/configs/apache/httpd-vhosts.conf.bak");
+		}
 		$fp = fopen("/etc/sentora/configs/apache/httpd.conf", "a");
 		$stringToWrite = "\nIncludeOptional /etc/sentora/configs/apache/users_ssl/*.conf\n";
 		fwrite($fp, $stringToWrite);

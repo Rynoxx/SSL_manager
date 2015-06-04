@@ -36,8 +36,6 @@ function removeModule(){
 		fwrite( $fopen, "$line");
 		}
 		fclose($fopen);
-		//unlink("/etc/sentora/configs/apache/httpd.conf");
-		//rename("/etc/sentora/configs/apache/httpd.conf.bak", "/etc/sentora/configs/apache/httpd.conf");
 		$sql = $zdbh->prepare("UPDATE x_settings SET so_value_tx='true' WHERE so_name_vc='apache_changed'");
         	$sql->execute();
 		}

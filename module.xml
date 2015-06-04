@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <module>
     <name>SSL Manager</name>
-    <version>107</version>
+    <version>108</version>
     <defaultcat>Domain Management</defaultcat>
     <desc>Mange you certificate</desc>
     <authorname>Diablo925</authorname>

@@ -3,9 +3,10 @@
     <name>SSL Manager</name>
     <version>108</version>
     <defaultcat>Domain Management</defaultcat>
-    <desc>Mange you certificate</desc>
+    <desc>Manage you certificate</desc>
     <authorname>Diablo925</authorname>
     <authoremail>carsten@alio.dk</authoremail>
     <authorurl>http://Alio.dk/</authorurl>
     <updateurl></updateurl>
+    <type>user</type>
 </module>

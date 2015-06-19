@@ -4,7 +4,7 @@
  * Installer for SSL_manager Module for sentora 1.0.0
  * Version : 100
  */
- 
+
 require_once('cnf/db.php');
 require_once('dryden/db/driver.class.php');
 require_once('dryden/debug/logger.class.php');
@@ -23,19 +23,19 @@ function installModule(){
 		global $controller;
 
 		if (!is_dir("/etc/sentora/configs/apache/users_ssl/")) {
-		mkdir("/etc/sentora/configs/apache/users_ssl");
-		chmod("/etc/sentora/configs/apache/users_ssl", 0777);
-		copy ("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
-		copy ("/etc/sentora/configs/apache/httpd-vhosts.conf", "/etc/sentora/configs/apache/httpd-vhosts.conf.bak");
-		$fp = fopen("/etc/sentora/configs/apache/httpd.conf", "a");
-		$stringToWrite = "\nIncludeOptional /etc/sentora/configs/apache/users_ssl/*.conf\n";
-		fwrite($fp, $stringToWrite);
-		fclose($fp);
-				$sql = $zdbh->prepare("UPDATE x_settings
-								SET so_value_tx='true'
-								WHERE so_name_vc='apache_changed'");
-        		$sql->execute();
-		        }
+			mkdir("/etc/sentora/configs/apache/users_ssl");
+			chmod("/etc/sentora/configs/apache/users_ssl", 0777);
+			copy("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
+			copy("/etc/sentora/configs/apache/httpd-vhosts.conf", "/etc/sentora/configs/apache/httpd-vhosts.conf.bak");
+			$fp = fopen("/etc/sentora/configs/apache/httpd.conf", "a");
+			$stringToWrite = "\nIncludeOptional /etc/sentora/configs/apache/users_ssl/*.conf\n";
+			fwrite($fp, $stringToWrite);
+			fclose($fp);
+			$sql = $zdbh->prepare("UPDATE x_settings
+							SET so_value_tx='true'
+							WHERE so_name_vc='apache_changed'");
+			$sql->execute();
+		}
 }
 
 //install

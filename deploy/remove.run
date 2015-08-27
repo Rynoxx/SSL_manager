@@ -4,7 +4,7 @@
  * Uninstall for SSL_manager Module for sentora 1.0.0
  * Version : 100
  */
- 
+
 require_once('cnf/db.php');
 require_once('dryden/db/driver.class.php');
 require_once('dryden/debug/logger.class.php');
@@ -21,33 +21,64 @@ require_once('inc/dbc.inc.php');
 removeModule();
 
 function removeModule(){
-    		global $zdbh;
-		global $controller;
-		
-		if (is_dir("/etc/sentora/configs/apache/users_ssl/")) {
-		rrmdir('/etc/sentora/configs/apache/users_ssl/');
-		$lines = file('/etc/sentora/configs/apache/httpd.conf');
-		array_pop($lines);
-		$file = join('',$lines);
-		$fopen = fopen("/etc/sentora/configs/apache/httpd.conf", "w+");
-		fwrite( $fopen, " ");
-		foreach ($lines as $line)
-		{
-		fwrite( $fopen, "$line");
+	global $zdbh;
+	global $controller;
+
+	$sentoraRoot = str_replace("/panel", "", ctrl_options::GetSystemOption('sentora_root'));
+
+	if(file_exists("/etc/httpd/conf.d/welcome.conf")){
+		$welcome_content = file_get_contents("/etc/httpd/conf.d/welcome.conf");
+		$welcome_content = str_replace($sentoraRoot . "panel/etc/static/pages/welcome.html", "/usr/share/httpd/noindex/index.html", $welcome_content);
+		$welcome_content = str_replace($sentoraRoot . "panel/etc/static/pages", "/usr/share/httpd/noindex", $welcome_content);
+		file_put_contents("/etc/httpd/conf.d/welcome.conf", $welcome_content);
+	}
+
+	if (is_dir($sentoraRoot . "configs/apache/users_ssl/")) {
+		rrmdir($sentoraRoot . 'configs/apache/users_ssl/');
+
+		if(file_exists($sentoraRoot . 'configs/apache/httpd.conf')){
+			$lines = file($sentoraRoot . 'configs/apache/httpd.conf');
+			array_pop($lines);
+			$file = join('',$lines);
+			$fopen = fopen($sentoraRoot . "configs/apache/httpd.conf", "w+");
+			fwrite( $fopen, " ");
+			foreach ($lines as $line){
+				fwrite( $fopen, "$line");
+			}
+
+			fclose($fopen);
 		}
-		fclose($fopen);
+
 		$sql = $zdbh->prepare("UPDATE x_settings SET so_value_tx='true' WHERE so_name_vc='apache_changed'");
-        	$sql->execute();
+		$sql->execute();
+	}
+
+	if(is_dir($sentoraRoot . "configs/proftpd/")){
+		$proftpdConfPath = ctrl_options::GetSystemOption("ftp_config_file");
+		$proftpdTLSPath = dirname($proftpdConfPath) . "/tls.conf";
+
+		if(file_exists($proftpdConfPath)){
+			$content = @file_get_contents($proftpdConfPath);
+
+			if(stripos($content, "#Sentora TLS Config") === false){
+				$content = str_replace("#Sentora TLS Config", "", $content);
+				$content = str_replace("Include " . $proftpdTLSPath . fs_filehandler::NewLine(), "", $content);
+				file_put_contents($proftpdConfPath, $content);
+				unlink($proftpdTLSPath);
+			}
 		}
+	}
 }
- function rrmdir($dir) {
-     $objects = scandir($dir);
-     foreach ($objects as $object) {
-       if ($object != "." && $object != "..") {
-         unlink($dir."/".$object);
-       }
-     }
-     reset($objects);
-     rmdir($dir);
- }
+
+function rrmdir($dir) {
+	$objects = scandir($dir);
+	foreach ($objects as $object) {
+		if ($object != "." && $object != "..") {
+			unlink($dir."/".$object);
+		}
+	}
+
+	reset($objects);
+	rmdir($dir);
+}
 ?>

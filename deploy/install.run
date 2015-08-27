@@ -19,23 +19,45 @@ require_once('inc/dbc.inc.php');
 
 
 function installModule(){
-		global $zdbh;
-		global $controller;
+	global $zdbh;
+	global $controller;
 
-		if (!is_dir("/etc/sentora/configs/apache/users_ssl/")) {
-			mkdir("/etc/sentora/configs/apache/users_ssl");
-			chmod("/etc/sentora/configs/apache/users_ssl", 0777);
-			copy("/etc/sentora/configs/apache/httpd.conf", "/etc/sentora/configs/apache/httpd.conf.bak");
-			copy("/etc/sentora/configs/apache/httpd-vhosts.conf", "/etc/sentora/configs/apache/httpd-vhosts.conf.bak");
-			$fp = fopen("/etc/sentora/configs/apache/httpd.conf", "a");
-			$stringToWrite = "\nIncludeOptional /etc/sentora/configs/apache/users_ssl/*.conf\n";
-			fwrite($fp, $stringToWrite);
-			fclose($fp);
-			$sql = $zdbh->prepare("UPDATE x_settings
-							SET so_value_tx='true'
-							WHERE so_name_vc='apache_changed'");
-			$sql->execute();
+	$sentoraRoot = str_replace("/panel", "", ctrl_options::GetSystemOption('sentora_root'));
+
+	if(file_exists("/etc/httpd/conf.d/welcome.conf")){
+		$welcome_content = file_get_contents("/etc/httpd/conf.d/welcome.conf");
+		$welcome_content = str_replace("/usr/share/httpd/noindex/index.html", $sentoraRoot . "panel/etc/static/pages/welcome.html", $welcome_content);
+		$welcome_content = str_replace("/usr/share/httpd/noindex", $sentoraRoot . "panel/etc/static/pages", $welcome_content);
+		file_put_contents("/etc/httpd/conf.d/welcome.conf", $welcome_content);
+	}
+
+	if (!is_dir($sentoraRoot . "configs/apache/users_ssl/")) {
+		mkdir($sentoraRoot . "configs/apache/users_ssl", 0777, true);
+		fs_filehandler::CopyFile($sentoraRoot . "configs/apache/httpd.conf", $sentoraRoot . "configs/apache/httpd.conf.bak");
+		fs_filehandler::CopyFile($sentoraRoot . "configs/apache/httpd-vhosts.conf", $sentoraRoot . "configs/apache/httpd-vhosts.conf.bak");
+		$fp = fopen($sentoraRoot . "configs/apache/httpd.conf", "a");
+		$stringToWrite = "\nIncludeOptional " . $sentoraRoot . "configs/apache/users_ssl/*.conf\n";
+		fwrite($fp, $stringToWrite);
+		fclose($fp);
+		//fs_filehandler::UpdateFile($sentoraRoot . "configs/apache/users_ssl/default.conf", 0755, "# Will be written to on next Daemon run");
+		$sql = $zdbh->prepare("UPDATE x_settings SET so_value_tx='true' WHERE so_name_vc='apache_changed'");
+		$sql->execute();
+	}
+
+	if(is_dir($sentoraRoot . "configs/proftpd/")){
+		$proftpdConfPath = ctrl_options::GetSystemOption("ftp_config_file");
+		$proftpdTLSPath = dirname($proftpdConfPath) . "/tls.conf";
+
+		if(file_exists($proftpdConfPath)){
+			fs_filehandler::CopyFile($proftpdConfPath, $proftpdConfPath . "bak");
+			$content = @file_get_contents($proftpdConfPath);
+
+			if(stripos($content, "#Sentora TLS Config") === false){
+				file_put_contents($proftpdConfPath, "#Sentora TLS Config" . fs_filehandler::NewLine() . "Include " . $proftpdTLSPath . fs_filehandler::NewLine(), FILE_APPEND);
+				fs_filehandler::UpdateFile($proftpdTLSPath, 0755, "# Will be written to on next Daemon run");
+			}
 		}
+	}
 }
 
 //install

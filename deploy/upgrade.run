@@ -4,7 +4,7 @@
  * Upgrade for SSL_manager Module for sentora 1.0.0
  * Version : 100
  */
- 
+
 require_once('cnf/db.php');
 require_once('dryden/db/driver.class.php');
 require_once('dryden/debug/logger.class.php');
@@ -21,9 +21,36 @@ require_once('inc/dbc.inc.php');
 UpgradeModule('108', 'SSL_manager');
 
 function UpgradeModule($newversion, $module){
-    global $zdbh;
-    $sql = $zdbh->prepare("UPDATE x_modules SET mo_version_in = $newversion WHERE mo_folder_vc = '$module'");
-    $sql->execute();    
+	global $zdbh;
+
+	$sentoraRoot = str_replace("/panel", "", ctrl_options::GetSystemOption('sentora_root'));
+
+	if(file_exists("/etc/httpd/conf.d/welcome.conf")){
+		$welcome_content = file_get_contents("/etc/httpd/conf.d/welcome.conf");
+		$welcome_content = str_replace("/usr/share/httpd/noindex/index.html", $sentoraRoot . "panel/etc/static/pages/welcome.html", $welcome_content);
+		$welcome_content = str_replace("/usr/share/httpd/noindex", $sentoraRoot . "panel/etc/static/pages", $welcome_content);
+		file_put_contents("/etc/httpd/conf.d/welcome.conf", $welcome_content);
+	}
+
+	$sql = $zdbh->prepare("UPDATE x_modules SET mo_version_in = $newversion WHERE mo_folder_vc = '$module'");
+	$sql->execute();   
+
+	$sql = $zdbh->prepare("UPDATE x_settings SET so_value_tx='true' WHERE so_name_vc='apache_changed'");
+	$sql->execute();
+
+	if(is_dir($sentoraRoot . "configs/proftpd/")){
+		$proftpdConfPath = ctrl_options::GetSystemOption("ftp_config_file");
+		$proftpdTLSPath = dirname($proftpdConfPath) . "/tls.conf";
+
+		if(file_exists($proftpdConfPath)){
+			$content = @file_get_contents($proftpdConfPath);
+
+			if(stripos($content, "#Sentora TLS Config") === false){
+				file_put_contents($proftpdConfPath, "#Sentora TLS Config" . fs_filehandler::NewLine() . "Include " . $proftpdTLSPath . fs_filehandler::NewLine(), FILE_APPEND);
+				file_put_contents($proftpdTLSPath, "# Will be written to on next Daemon run");
+			}
+		}
+	}
 }
 
 ?>
